@@ -12,7 +12,7 @@ using Para.Data.Context;
 namespace Para.Data.Migrations
 {
     [DbContext(typeof(ParaSqlDbContext))]
-    [Migration("20240706094857_InitialCreate")]
+    [Migration("20240718123113_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -135,6 +135,61 @@ namespace Para.Data.Migrations
                     b.ToTable("CustomerAddress", "dbo");
                 });
 
+            modelBuilder.Entity("Para.Data.Domain.CustomerDetail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("EducationStatus")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("FatherName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("InsertDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("InsertUser")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("MontlyIncome")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("MotherName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Occupation")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
+                    b.ToTable("CustomerDetail", "dbo");
+                });
+
             modelBuilder.Entity("Para.Data.Domain.CustomerPhone", b =>
                 {
                     b.Property<long>("Id")
@@ -191,6 +246,17 @@ namespace Para.Data.Migrations
                     b.Navigation("Customer");
                 });
 
+            modelBuilder.Entity("Para.Data.Domain.CustomerDetail", b =>
+                {
+                    b.HasOne("Para.Data.Domain.Customer", "Customer")
+                        .WithOne("CustomerDetail")
+                        .HasForeignKey("Para.Data.Domain.CustomerDetail", "CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("Para.Data.Domain.CustomerPhone", b =>
                 {
                     b.HasOne("Para.Data.Domain.Customer", "Customer")
@@ -205,6 +271,9 @@ namespace Para.Data.Migrations
             modelBuilder.Entity("Para.Data.Domain.Customer", b =>
                 {
                     b.Navigation("CustomerAddresses");
+
+                    b.Navigation("CustomerDetail")
+                        .IsRequired();
 
                     b.Navigation("CustomerPhones");
                 });
