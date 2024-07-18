@@ -10,6 +10,7 @@ public interface IGenericRepository<TEntity> where TEntity : class
     Task<TEntity?> GetById(long Id);
     Task<TEntity?> GetWithIncludeByIdAsync(long Id, params Expression<Func<TEntity, object>>[] includes);
     Task<List<TEntity>> Where(Expression<Func<TEntity, bool>> predicate);
+    IQueryable<TEntity> Include(params Expression<Func<TEntity, object>>[] includes);
     Task Insert(TEntity entity);
     Task Update(TEntity entity);
     Task Delete(TEntity entity);

@@ -1,8 +1,7 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Para.Data.Context;
 using Para.Data.Domain;
+using Para.Data.UnitOfWork;
 
 namespace Para.Api.Controllers
 {
@@ -10,49 +9,61 @@ namespace Para.Api.Controllers
     [ApiController]
     public class CustomersController : ControllerBase
     {
-        private readonly ParaSqlDbContext dbContext;
 
-        public CustomersController(ParaSqlDbContext dbContext)
+        private readonly IUnitOfWork unitOfWork;
+
+        public CustomersController(IUnitOfWork unitOfWork)
         {
-            this.dbContext = dbContext;
+            this.unitOfWork = unitOfWork;
         }
 
 
         [HttpGet]
         public async Task<List<Customer>> Get()
         {
-            var entityList1 = await dbContext.Set<Customer>().Include(x=> x.CustomerAddresses).Include(x=> x.CustomerPhones).Include(x=> x.CustomerDetail).ToListAsync();
-            var entityList2 = await dbContext.Customers.Include(x=> x.CustomerAddresses).Include(x=> x.CustomerPhones).Include(x=> x.CustomerDetail).ToListAsync();
-            return entityList1;
+            var entityList = await unitOfWork.CustomerRepository.GetAll();
+            return entityList;
         }
 
         [HttpGet("{customerId}")]
         public async Task<Customer> Get(long customerId)
         {
-            var entity = await dbContext.Set<Customer>().Include(x=> x.CustomerAddresses).Include(x=> x.CustomerPhones).Include(x=> x.CustomerDetail).FirstOrDefaultAsync(x => x.Id == customerId);
+            var entity = await unitOfWork.CustomerRepository.GetById(customerId);
             return entity;
+        }
+
+        [HttpGet("{customerNumber}")]
+        public async Task<List<Customer>> GetCustomerByCustomerNumber(int CustomerNumber)
+        {
+            return await unitOfWork.CustomerRepository.Where(x => x.CustomerNumber == CustomerNumber);
+        }
+        [HttpGet("{address}")]
+        public async Task<List<Customer>> GetCustomerWithCustomerAddress()
+        {
+            return await unitOfWork.CustomerRepository.Include(x => x.CustomerAddresses).ToListAsync();
         }
 
         [HttpPost]
         public async Task Post([FromBody] Customer value)
         {
-            var entity = await dbContext.Set<Customer>().AddAsync(value);
-            await dbContext.SaveChangesAsync();
+            await unitOfWork.CustomerRepository.Insert(value);
+            await unitOfWork.Complete();
         }
 
         [HttpPut("{customerId}")]
         public async Task Put(long customerId, [FromBody] Customer value)
         {
-            dbContext.Set<Customer>().Update(value);
-            await dbContext.SaveChangesAsync();
+            await unitOfWork.CustomerRepository.Update(value);
+            await unitOfWork.Complete();
         }
 
         [HttpDelete("{customerId}")]
         public async Task Delete(long customerId)
         {
-            var entity = await dbContext.Set<Customer>().FirstOrDefaultAsync(x => x.Id == customerId);
-            dbContext.Set<Customer>().Remove(entity);
-            await dbContext.SaveChangesAsync();
+            var entity = await unitOfWork.CustomerRepository.GetById(customerId);
+            await unitOfWork.CustomerRepository.Delete(entity);
+            await unitOfWork.Complete();
         }
+
     }
 }

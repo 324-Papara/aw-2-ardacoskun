@@ -47,6 +47,11 @@ public class GenericRepository<TEntity> : IGenericRepository<TEntity> where TEnt
     {
         return await dbContext.Set<TEntity>().Where(condition).ToListAsync();
     }
+    public IQueryable<TEntity> Include(params Expression<Func<TEntity, object>>[] includes)
+    {
+        return includes.Aggregate(dbContext.Set<TEntity>().AsQueryable(),
+            (current, include) => current.Include(include));
+    }
 
     public async Task Insert(TEntity entity)
     {
